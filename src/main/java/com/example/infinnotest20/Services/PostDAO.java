@@ -42,24 +42,33 @@ public class PostDAO {
               }
        }
 
-       public int addPost(Post post) {
+       public int addPost(String post, String author) {
               try (SqlSession conn = sessionFactory.openSession()) {
                      var mapper = conn.getMapper(PostsMapper.class);
-                     return mapper.addPost(post.post, post.author);
+                     int result = mapper.addPost(post, author);
+                     conn.commit();
+
+                     return result;
               }
        }
 
-       public int updatePost(int id) {
+       public int updatePost(int id, String post, String author) {
               try (SqlSession conn = sessionFactory.openSession()) {
                      var mapper = conn.getMapper(PostsMapper.class);
-                     return mapper.updatePost(id);
+                     int result = mapper.updatePost(id, post, author);
+                     conn.commit();
+
+                     return result;
               }
        }
 
        public int deletePost(int id) {
               try (SqlSession conn = sessionFactory.openSession()) {
                      var mapper = conn.getMapper(PostsMapper.class);
-                     return mapper.deletePost(id);
+                     int result = mapper.deletePost(id);
+                     conn.commit();
+
+                     return result;
               }
        }
 }

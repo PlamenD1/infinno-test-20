@@ -7,21 +7,21 @@ import org.apache.ibatis.annotations.*;
 import java.util.List;
 
 public interface PostsMapper {
-    @Select("SELECT * FROM Posts")
+    @Select("SELECT * FROM posts")
     List<Post> getAllPosts();
 
-    @Select("SELECT * FROM Posts where ID == #{id}")
-    Post getPostById(@Param("id") int id);
+    @Select("SELECT * FROM posts WHERE id = #{value}")
+    Post getPostById(int id);
 
-    @Select("SELECT comments FROM Posts where ID == #{id}")
-    List<Comment> getCommentsForPost(@Param("id") int id);
+    @Select("SELECT * FROM comments where id = #{value}")
+    List<Comment> getCommentsForPost(int id);
 
-    @Insert("INSERT INTO Posts (post, author) VALUES (#{post}, #{author});")
-    int addPost(String post, String author);
+    @Insert("INSERT INTO posts (post, author) VALUES (#{post}, #{author})")
+    int addPost(@Param("post") String post, @Param("author") String author);
 
-    @Update("UPDATE Posts SET post = #{post}, author = #{author} WHERE ID == #{id}")
-    int updatePost(int id);
+    @Update("UPDATE posts SET post = #{post}, author = #{author} WHERE id = #{id}")
+    int updatePost(@Param("id") int id, @Param("post") String post, @Param("author") String author);
 
-    @Delete("DELETE FROM Posts WHERE ID == #{id}")
+    @Delete("DELETE FROM posts WHERE id = #{id}")
     int deletePost(int id);
 }
