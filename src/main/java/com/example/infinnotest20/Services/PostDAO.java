@@ -1,5 +1,6 @@
 package com.example.infinnotest20.Services;
 
+import com.example.infinnotest20.AuthorizedSqlSessionFactoryBuilder;
 import com.example.infinnotest20.Comment;
 import com.example.infinnotest20.Interfaces.PostsMapper;
 import com.example.infinnotest20.Post;
@@ -15,13 +16,14 @@ import java.io.FileReader;
 import java.util.List;
 
 public class PostDAO {
-       SqlSessionFactory sessionFactory;
 
+       SqlSessionFactory sessionFactory;
        public PostDAO() throws FileNotFoundException {
               sessionFactory = new SqlSessionFactoryBuilder().build(new FileReader(new File("C:\\Users\\plame\\IdeaProjects\\infinno-test-20\\src\\main\\java\\com\\example\\infinnotest20\\config.xml")));
        }
 
        public List<Post> getAllPosts() {
+
               try (SqlSession conn = sessionFactory.openSession()) {
                      var mapper = conn.getMapper(PostsMapper.class);
                      return mapper.getAllPosts();
@@ -42,20 +44,22 @@ public class PostDAO {
               }
        }
 
-       public int addPost(String post, String author) {
+       public int addPost(Post post) {
               try (SqlSession conn = sessionFactory.openSession()) {
                      var mapper = conn.getMapper(PostsMapper.class);
-                     int result = mapper.addPost(post, author);
+                     System.out.println(post.post_body);
+                     System.out.println(post.author_id);
+                     int result = mapper.addPost(post);
                      conn.commit();
 
                      return result;
               }
        }
 
-       public int updatePost(int id, String post, String author) {
+       public int updatePost(Post post) {
               try (SqlSession conn = sessionFactory.openSession()) {
                      var mapper = conn.getMapper(PostsMapper.class);
-                     int result = mapper.updatePost(id, post, author);
+                     int result = mapper.updatePost(post);
                      conn.commit();
 
                      return result;

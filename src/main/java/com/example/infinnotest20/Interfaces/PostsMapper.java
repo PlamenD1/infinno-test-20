@@ -16,11 +16,12 @@ public interface PostsMapper {
     @Select("SELECT * FROM comments where id = #{value}")
     List<Comment> getCommentsForPost(int id);
 
-    @Insert("INSERT INTO posts (post, author) VALUES (#{post}, #{author})")
-    int addPost(@Param("post") String post, @Param("author") String author);
+    @Insert("INSERT INTO posts (post_body, author_id) VALUES (#{post.post_body}, #{post.author_id})")
+    @Options(useGeneratedKeys=true, keyColumn="id", keyProperty="id")
+    int addPost(@Param("post") Post post);
 
-    @Update("UPDATE posts SET post = #{post}, author = #{author} WHERE id = #{id}")
-    int updatePost(@Param("id") int id, @Param("post") String post, @Param("author") String author);
+    @Update("UPDATE posts SET post_body = #{post.post_body}, author_id = #{post.author_id} WHERE id = #{post.id}")
+    int updatePost(@Param("post") Post post);
 
     @Delete("DELETE FROM posts WHERE id = #{id}")
     int deletePost(int id);

@@ -2,17 +2,17 @@ package com.example.infinnotest20;
 
 public class Post {
     public int id;
-    public String post;
-    public String author;
+    public String post_body;
+    public String author_id;
 
     public Post() {}
-    public Post(String post, String author) {
-        this.post = post;
-        this.author = author;
+    public Post(String post_body, String author_id) {
+        this.post_body = post_body;
+        this.author_id = author_id;
     }
-    public Post(int id, String post, String author) {
+    public Post(int id, String post_body, String author_id) {
         this.id = id;
-        this.post = post;
-        this.author = author;
+        this.post_body = post_body;
+        this.author_id = author_id;
     }
 }

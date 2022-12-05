@@ -16,7 +16,8 @@
     </environments>
 
     <mappers>
-        <mapper class="com.example.infinnotest20.Interfaces.CommentsMapper"/>
         <mapper class="com.example.infinnotest20.Interfaces.PostsMapper"/>
+        <mapper class="com.example.infinnotest20.Interfaces.CommentsMapper"/>
+        <mapper class="com.example.infinnotest20.Interfaces.LoginMapper"/>
     </mappers>
 </configuration>
