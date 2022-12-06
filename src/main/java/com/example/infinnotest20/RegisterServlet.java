@@ -1,9 +1,7 @@
 package com.example.infinnotest20;
 
-import static jakarta.servlet.http.HttpServletResponse.*;
-
 import com.example.infinnotest20.Models.User;
-import com.example.infinnotest20.Services.LoginDAO;
+import com.example.infinnotest20.Services.RegisterDAO;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import jakarta.servlet.ServletException;
@@ -18,16 +16,17 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
+import static jakarta.servlet.http.HttpServletResponse.*;
+
 @MultipartConfig
-@WebServlet(name = "loginServlet", value = "/login-servlet")
-public class LoginServlet extends HttpServlet {
+@WebServlet(name = "registerServlet", value = "/register-servlet")
+
+public class RegisterServlet extends HttpServlet {
     GsonBuilder gsonBuilder = new GsonBuilder();
     Gson gson = gsonBuilder.setPrettyPrinting().create();
+    RegisterDAO dao = new RegisterDAO();
 
-    LoginDAO dao = new LoginDAO();
-
-    public LoginServlet() throws FileNotFoundException {}
-
+    public RegisterServlet() throws FileNotFoundException {}
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         Part user = request.getPart("username");
         String userString = new BufferedReader(new InputStreamReader(user.getInputStream())).readLine();
@@ -45,9 +44,11 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
-        if (!dao.login(new User(userString, hashPass))) {
-            String invalidCredentials = "Invalid credentials! USER NOT LOGGED IN!";
-            sendError(response, SC_UNAUTHORIZED, invalidCredentials);
+        int rowsAffected = dao.register(new User(userString, hashPass));
+
+        if (rowsAffected != 1) {
+            String existingAccount = "Account with these credentials already exists!";
+            sendError(response, SC_UNAUTHORIZED, existingAccount);
             return;
         }
 

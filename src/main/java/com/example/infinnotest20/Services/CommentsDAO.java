@@ -1,9 +1,7 @@
 package com.example.infinnotest20.Services;
 
-import com.example.infinnotest20.AuthorizedSqlSessionFactoryBuilder;
-import com.example.infinnotest20.Comment;
+import com.example.infinnotest20.Models.Comment;
 import com.example.infinnotest20.Interfaces.CommentsMapper;
-import com.example.infinnotest20.Interfaces.PostsMapper;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;

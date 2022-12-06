@@ -1,4 +1,4 @@
-package com.example.infinnotest20;
+package com.example.infinnotest20.Models;
 
 public class Post {
     public int id;

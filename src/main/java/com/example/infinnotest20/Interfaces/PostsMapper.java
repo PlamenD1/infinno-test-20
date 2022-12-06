@@ -1,7 +1,7 @@
 package com.example.infinnotest20.Interfaces;
 
-import com.example.infinnotest20.Comment;
-import com.example.infinnotest20.Post;
+import com.example.infinnotest20.Models.Comment;
+import com.example.infinnotest20.Models.Post;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;

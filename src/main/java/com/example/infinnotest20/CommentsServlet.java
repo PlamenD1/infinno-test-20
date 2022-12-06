@@ -1,7 +1,9 @@
 package com.example.infinnotest20;
 
+import static jakarta.servlet.http.HttpServletResponse.*;
+
+import com.example.infinnotest20.Models.Comment;
 import com.example.infinnotest20.Services.CommentsDAO;
-import com.example.infinnotest20.Services.PostDAO;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import jakarta.servlet.annotation.WebServlet;
@@ -13,53 +15,74 @@ import jakarta.servlet.http.HttpSession;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @WebServlet(name = "commentsServlet", value = "/comments-servlet")
 public class CommentsServlet extends HttpServlet {
-
+    final Map<String, Pattern> patterns = new HashMap<>();
     GsonBuilder gsonBuilder = new GsonBuilder();
     Gson gson = gsonBuilder.setPrettyPrinting().create();
-
     CommentsDAO dao = new CommentsDAO();
 
     public CommentsServlet() throws FileNotFoundException {}
+
+    public void init() {
+        patterns.put("emptyPath", Pattern.compile("\\/")); //get all comments for post
+    }
+
+    PathInfo getPath(HttpServletRequest request) {
+        String path = request.getPathInfo();
+        if (path == null || path.equals("/"))
+            return new PathInfo("emptyPath", null);
+
+        for (var entry : patterns.entrySet()) {
+            Matcher matcher = entry.getValue().matcher(path);
+
+            if (matcher.matches()) {
+                return new PathInfo(entry.getKey(), matcher);
+            }
+        }
+
+        return new PathInfo("404", null);
+    }
+
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         if (!isAuthorized(request, response))
             return;
 
-        String[] pathParts = new String[0];
-        if (request.getPathInfo() != null)
-            pathParts = request.getPathInfo().substring(1).split("/");
+        PathInfo pathInfo = getPath(request);
+        String pathName = pathInfo.pathName;
 
-        if (pathParts.length != 0)
-            sendError(response, 404, "404 Not Found!");
+        switch (pathName) {
+            case "emptyPath": {
+                int id = Integer.parseInt(request.getParameter("postId"));
 
-        Integer id = null;
-        try {
-            id = Integer.parseInt(request.getParameter("postId"));
-        } catch (Exception e) {
-            sendError(response, 404, "404 Not Found!");
-            return;
+                List<Comment> result = dao.getCommentsByPost(id);
+
+                sendResponse(response, result);
+            }
+            default: sendError(response, SC_NOT_FOUND, "404 Not Found!");
         }
-
-        List<Comment> result = dao.getCommentsByPost(id);
-
-        sendResponse(response, result);
     }
 
     void sendResponse(HttpServletResponse response, Object o) throws IOException {
         String json = gson.toJson(o);
 
         response.setStatus(200);
-        response.addHeader("Content-Length", String.valueOf(json.length()));
         response.addHeader("Content-Type", "application/json");
         response.getOutputStream().write(json.getBytes(StandardCharsets.UTF_8));
     }
 
     void sendError(HttpServletResponse response, int status, String message) throws IOException {
         response.setStatus(status);
-        response.getOutputStream().write(message.getBytes(StandardCharsets.UTF_8));
+        String errorMessage = gson.toJson(message);
+
+        response.addHeader("Content-Type", "application/json");
+        response.getOutputStream().write(errorMessage.getBytes(StandardCharsets.UTF_8));
     }
 
     boolean isAuthorized(HttpServletRequest request, HttpServletResponse response) throws IOException {

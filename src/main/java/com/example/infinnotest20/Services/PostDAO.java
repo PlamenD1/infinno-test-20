@@ -1,11 +1,8 @@
 package com.example.infinnotest20.Services;
 
-import com.example.infinnotest20.AuthorizedSqlSessionFactoryBuilder;
-import com.example.infinnotest20.Comment;
+import com.example.infinnotest20.Models.Comment;
 import com.example.infinnotest20.Interfaces.PostsMapper;
-import com.example.infinnotest20.Post;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.session.Configuration;
+import com.example.infinnotest20.Models.Post;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
@@ -19,11 +16,11 @@ public class PostDAO {
 
        SqlSessionFactory sessionFactory;
        public PostDAO() throws FileNotFoundException {
-              sessionFactory = new SqlSessionFactoryBuilder().build(new FileReader(new File("C:\\Users\\plame\\IdeaProjects\\infinno-test-20\\src\\main\\java\\com\\example\\infinnotest20\\config.xml")));
+              FileReader fr = new FileReader(new File("C:\\Users\\plame\\IdeaProjects\\infinno-test-20\\src\\main\\java\\com\\example\\infinnotest20\\config.xml"));
+              sessionFactory = new SqlSessionFactoryBuilder().build(fr);
        }
 
        public List<Post> getAllPosts() {
-
               try (SqlSession conn = sessionFactory.openSession()) {
                      var mapper = conn.getMapper(PostsMapper.class);
                      return mapper.getAllPosts();
@@ -47,8 +44,6 @@ public class PostDAO {
        public int addPost(Post post) {
               try (SqlSession conn = sessionFactory.openSession()) {
                      var mapper = conn.getMapper(PostsMapper.class);
-                     System.out.println(post.post_body);
-                     System.out.println(post.author_id);
                      int result = mapper.addPost(post);
                      conn.commit();
 

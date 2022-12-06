@@ -1,6 +1,6 @@
 package com.example.infinnotest20.Interfaces;
 
-import com.example.infinnotest20.Comment;
+import com.example.infinnotest20.Models.Comment;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;

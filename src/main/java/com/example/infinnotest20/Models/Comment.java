@@ -1,4 +1,4 @@
-package com.example.infinnotest20;
+package com.example.infinnotest20.Models;
 
 public class Comment {
     public int id;

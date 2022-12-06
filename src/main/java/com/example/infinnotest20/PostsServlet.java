@@ -1,10 +1,18 @@
 package com.example.infinnotest20;
 
+import static jakarta.servlet.http.HttpServletResponse.*;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.example.infinnotest20.Models.Comment;
+import com.example.infinnotest20.Models.Post;
 import com.example.infinnotest20.Services.PostDAO;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -13,65 +21,69 @@ import jakarta.servlet.annotation.*;
 
 @WebServlet(name = "postsServlet", value = "/posts-servlet")
 public class PostsServlet extends HttpServlet {
-    GsonBuilder gsonBuilder = new GsonBuilder();
-    Gson gson = gsonBuilder.setPrettyPrinting().create();
 
+    final Map<String, Pattern> patterns = new HashMap<>();
+
+    Gson gson = new GsonBuilder().setPrettyPrinting().create();
     PostDAO dao = new PostDAO();
 
     public PostsServlet() throws FileNotFoundException {}
+
+    public void init() {
+        patterns.put("singleNumberPath", Pattern.compile("\\/(\\d+)")); //get single post; update post; delete post
+        patterns.put("commentsOfSinglePost", Pattern.compile("\\/(\\d+)/comments")); //get comments of single post
+    }
+
+    PathInfo getPath(HttpServletRequest request) {
+        String path = request.getPathInfo();
+        if (path == null || path.equals("/"))
+            return new PathInfo("emptyPath", null);
+
+        for (var entry : patterns.entrySet()) {
+            Matcher matcher = entry.getValue().matcher(path);
+
+            if (matcher.matches()) {
+                return new PathInfo(entry.getKey(), matcher);
+            }
+        }
+
+        return new PathInfo("404", null);
+    }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         if (!isAuthorized(request, response))
             return;
 
-        String[] pathParts = new String[0];
-        if (request.getPathInfo() != null)
-            pathParts = request.getPathInfo().substring(1).split("/");
+        PathInfo pathInfo = getPath(request);
+        String pathName = pathInfo.pathName;
+        Matcher matcher = pathInfo.matcher;
 
-        switch (pathParts.length) {
-            case 0: {
+        switch (pathName) {
+            case "emptyPath": {
                 List<Post> posts = dao.getAllPosts();
                 sendResponse(response, posts);
                 break;
             }
+            case "singleNumberPath": {
+                String idString = matcher.group(1);
+                int id = Integer.parseInt(idString);
+                Post post = dao.getPostById(id);
 
-            case 1: {
-                try {
-                    int id = Integer.parseInt(pathParts[0]);
-                    Post post = dao.getPostById(id);
+                if (post == null)
+                    sendError(response, SC_NOT_FOUND, "404 Not Found!");
 
-                    if (post == null)
-                        sendError(response, 404, "404 Not Found!");
-
-                    sendResponse(response, post);
-                } catch (Exception e) {
-                    System.out.println(e);
-                    sendError(response, 404, "404 Not Found!");
-                    return;
-                }
+                sendResponse(response, post);
                 break;
             }
+            case "commentsOfSinglePost": {
+                String idString = matcher.group(1);
+                int id = Integer.parseInt(idString);
 
-            case 2: {
-                Integer id = null;
-
-                try {
-                    id = Integer.parseInt(pathParts[0]);
-                } catch (Exception e) {
-                    sendError(response, 404, "404 Not Found!");
-                    return;
-                }
-
-                if (!pathParts[1].equals("comments")) {
-                    sendError(response, 404, "404 Not Found!");
-                    return;
-                }
-
-                var obj = dao.getCommentsForPost(id);
+                List<Comment> obj = dao.getCommentsForPost(id);
                 sendResponse(response, obj);
                 break;
             }
-            default: sendError(response, 404, "404 Not Found!");
+            default: sendError(response, SC_NOT_FOUND, "404 Not Found!");
         }
     }
 
@@ -79,20 +91,18 @@ public class PostsServlet extends HttpServlet {
         if (!isAuthorized(request, response))
             return;
 
-        String[] pathParts = new String[0];
-        if (request.getPathInfo() != null)
-            pathParts = request.getPathInfo().substring(1).split("/");
-
+        PathInfo pathInfo = getPath(request);
+        String pathName = pathInfo.pathName;
         Post postToAdd = getPostFromBody(request);
 
-        if (pathParts.length == 0) {
-            int rowsAffected = dao.addPost(postToAdd);
+        switch (pathName) {
+            case "emptyPath": {
+                dao.addPost(postToAdd);
 
-            if (rowsAffected != 1)
-                sendError(response, 400, "400 Couldn't insert post!");
-
-            String addedPostId = "Added post id: " + postToAdd.id;
-            sendResponse(response, addedPostId);
+                sendResponse(response, postToAdd);
+                break;
+            }
+            default:sendError(response, SC_NOT_FOUND, "404 Not Found!");
         }
     }
 
@@ -100,77 +110,71 @@ public class PostsServlet extends HttpServlet {
         if (!isAuthorized(request, response))
             return;
 
-        String[] pathParts = new String[0];
-        if (request.getPathInfo() != null)
-            pathParts = request.getPathInfo().substring(1).split("/");
-
+        PathInfo pathInfo = getPath(request);
+        String pathName = pathInfo.pathName;
+        Matcher matcher = pathInfo.matcher;
         Post postToAdd = getPostFromBody(request);
 
-        if (pathParts.length != 1)
-            sendError(response, 404, "404 Not Found!");
+        switch (pathName) {
+            case "singleNumberPath": {
+                String idString = matcher.group(1);
 
-        Integer id = null;
-        try {
-            id = Integer.parseInt(pathParts[0]);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            sendError(response, 404, "404 Not Found!");
-            return;
+                postToAdd.id = Integer.parseInt(idString);
+                int rowsAffected = dao.updatePost(postToAdd);
+                if (rowsAffected != 1)
+                    sendError(response, SC_BAD_REQUEST, "Error while updating post!");
+
+                sendResponse(response, postToAdd);
+                break;
+            }
+            default: sendError(response, SC_NOT_FOUND, "404 Not Found!");
         }
-        postToAdd.id = id;
-
-        int rowsAffected = dao.updatePost(postToAdd);
-        if (rowsAffected != 1)
-            sendError(response, 400, "Error while updating post!");
-
-        sendResponse(response, postToAdd);
     }
 
     public void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
         if (!isAuthorized(request, response))
             return;
 
-        String[] pathParts = new String[0];
-        if (request.getPathInfo() != null)
-            pathParts = request.getPathInfo().substring(1).split("/");
+        PathInfo pathInfo = getPath(request);
+        String pathName = pathInfo.pathName;
+        Matcher matcher = pathInfo.matcher;
 
-        if (pathParts.length != 1)
-            sendError(response, 404, "404 Not Found!");
+        switch (pathName) {
+            case "singleNumberPath": {
+                String idString = matcher.group(1);
+                int id = Integer.parseInt(idString);
 
-        Integer id = null;
-        try {
-            id = Integer.parseInt(pathParts[0]);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            sendError(response, 404, "404 Not Found!");
-            return;
+                int rowsAffected = dao.deletePost(id);
+                if (rowsAffected != 1)
+                    sendError(response, SC_BAD_REQUEST, "Error while deleting post!");
+
+                sendResponse(response, id);
+                break;
+            }
+            default: sendError(response, SC_NOT_FOUND, "404 Not Found!");
         }
-
-        int rowsAffected = dao.deletePost(id);
-        if (rowsAffected != 1)
-            sendError(response, 400, "Error while deleting post!");
-
-        sendResponse(response, "Deleted post with id: " + id);
     }
 
     void sendResponse(HttpServletResponse response, Object o) throws IOException {
         String json = gson.toJson(o);
 
         response.setStatus(200);
-        response.addHeader("Content-Length", String.valueOf(json.length()));
         response.addHeader("Content-Type", "application/json");
         response.getOutputStream().write(json.getBytes(StandardCharsets.UTF_8));
     }
 
     void sendError(HttpServletResponse response, int status, String message) throws IOException {
         response.setStatus(status);
-        response.getOutputStream().write(message.getBytes(StandardCharsets.UTF_8));
+        String errorMessage = gson.toJson(message);
+
+        response.addHeader("Content-Type", "application/json");
+        response.getOutputStream().write(errorMessage.getBytes(StandardCharsets.UTF_8));
     }
 
     boolean isAuthorized(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession(false);
         if (session == null) {
-            sendError(response, 403, "Unauthorized user!");
+            sendError(response, SC_FORBIDDEN, "Unauthorized user!");
             return false;
         }
 
@@ -178,7 +182,8 @@ public class PostsServlet extends HttpServlet {
     }
 
     Post getPostFromBody(HttpServletRequest request) throws IOException {
-        String jsonString = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+        var collector = Collectors.joining(System.lineSeparator());
+        String jsonString = request.getReader().lines().collect(collector);
         return gson.fromJson(jsonString, Post.class);
     }
 }
