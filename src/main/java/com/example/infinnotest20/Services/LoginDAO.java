@@ -9,12 +9,14 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.net.URISyntaxException;
+import java.util.Objects;
 
 public class LoginDAO {
     SqlSessionFactory sessionFactory;
 
-    public LoginDAO() throws FileNotFoundException {
-        sessionFactory = new SqlSessionFactoryBuilder().build(new FileReader(new File("C:\\Users\\plame\\IdeaProjects\\infinno-test-20\\src\\main\\java\\com\\example\\infinnotest20\\config.xml")));
+    public LoginDAO() throws FileNotFoundException, URISyntaxException {
+        sessionFactory = new SqlSessionFactoryBuilder().build(new FileReader(new File(Objects.requireNonNull(this.getClass().getResource("/config.xml")).getFile())));
     }
 
     public boolean login(User user) {
@@ -25,4 +27,12 @@ public class LoginDAO {
             return userId != null;
         }
     }
+
+    public Integer getUserSalt(String username) {
+        try (SqlSession conn = sessionFactory.openSession()) {
+            var mapper = conn.getMapper(LoginMapper.class);
+            return mapper.getUserSalt(username);
+        }
+    }
+
 }

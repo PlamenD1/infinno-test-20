@@ -11,12 +11,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.List;
+import java.util.Objects;
 
 public class PostDAO {
 
        SqlSessionFactory sessionFactory;
        public PostDAO() throws FileNotFoundException {
-              FileReader fr = new FileReader(new File("C:\\Users\\plame\\IdeaProjects\\infinno-test-20\\src\\main\\java\\com\\example\\infinnotest20\\config.xml"));
+              FileReader fr = new FileReader(new File(Objects.requireNonNull(this.getClass().getResource("/config.xml")).getFile()));
               sessionFactory = new SqlSessionFactoryBuilder().build(fr);
        }
 

@@ -1,4 +1,4 @@
-package com.example.infinnotest20;
+package com.example.infinnotest20.Servlets;
 
 import com.example.infinnotest20.Models.User;
 import com.example.infinnotest20.Services.RegisterDAO;
@@ -15,6 +15,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Random;
 
 import static jakarta.servlet.http.HttpServletResponse.*;
 
@@ -32,11 +33,6 @@ public class RegisterServlet extends HttpServlet {
         String userString = new BufferedReader(new InputStreamReader(user.getInputStream())).readLine();
         Part pass = request.getPart("password");
         String passString = new BufferedReader(new InputStreamReader(pass.getInputStream())).readLine();
-        String hashPass = DigestUtils.sha1Hex(passString);
-
-        String path = request.getPathInfo();
-        if (path != null && !path.equals("/"))
-            sendError(response, SC_NOT_FOUND, "404 Not Found!");
 
         if (userString == null ||
                 passString == null) {
@@ -44,7 +40,16 @@ public class RegisterServlet extends HttpServlet {
             return;
         }
 
-        int rowsAffected = dao.register(new User(userString, hashPass));
+        Random r = new Random();
+        int salt = r.nextInt();
+        String hashPass = DigestUtils.sha1Hex(passString.concat(String.valueOf(salt)));
+
+        String path = request.getPathInfo();
+        if (path != null && !path.equals("/"))
+            sendError(response, SC_NOT_FOUND, "404 Not Found!");
+
+
+        int rowsAffected = dao.register(new User(userString, hashPass, salt));
 
         if (rowsAffected != 1) {
             String existingAccount = "Account with these credentials already exists!";
@@ -54,14 +59,6 @@ public class RegisterServlet extends HttpServlet {
 
         HttpSession session = request.getSession(true);
         session.setAttribute("user", userString);
-    }
-
-    void sendResponse(HttpServletResponse response, Object o) throws IOException {
-        String json = gson.toJson(o);
-
-        response.setStatus(200);
-        response.addHeader("Content-Type", "application/json");
-        response.getOutputStream().write(json.getBytes(StandardCharsets.UTF_8));
     }
 
     void sendError(HttpServletResponse response, int status, String message) throws IOException {

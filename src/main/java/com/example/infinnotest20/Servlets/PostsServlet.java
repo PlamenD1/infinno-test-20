@@ -1,4 +1,4 @@
-package com.example.infinnotest20;
+package com.example.infinnotest20.Servlets;
 
 import static jakarta.servlet.http.HttpServletResponse.*;
 
@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import com.example.infinnotest20.Models.Comment;
 import com.example.infinnotest20.Models.Post;
+import com.example.infinnotest20.Utils.PathInfo;
 import com.example.infinnotest20.Services.PostDAO;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

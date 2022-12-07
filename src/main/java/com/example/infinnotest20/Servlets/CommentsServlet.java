@@ -1,8 +1,9 @@
-package com.example.infinnotest20;
+package com.example.infinnotest20.Servlets;
 
 import static jakarta.servlet.http.HttpServletResponse.*;
 
 import com.example.infinnotest20.Models.Comment;
+import com.example.infinnotest20.Utils.PathInfo;
 import com.example.infinnotest20.Services.CommentsDAO;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
